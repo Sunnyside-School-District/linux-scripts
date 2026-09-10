@@ -1,0 +1,9 @@
+{
+  "name": "susd-linux-scripts",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Static Linux script catalog for Sunnyside Unified School District.",
+  "scripts": {
+    "build": "node scripts/generate-index.mjs"
+  }
+}
