@@ -5,5 +5,8 @@
   "description": "Static Linux script catalog for Sunnyside Unified School District.",
   "scripts": {
     "build": "node scripts/generate-index.mjs"
+  },
+  "devDependencies": {
+    "wrangler": "^4.131.0"
   }
 }
