@@ -20,12 +20,12 @@
 # Those ecosystems can contain application-pinned dependencies, so blindly
 # upgrading them can break production services.
 #
-# By default this script NEVER reboots the server. Use --reboot to reboot
-# automatically, but only when a reboot is detected as required.
+# By default this script automatically reboots the server when a reboot is
+# detected as required. Use --no-reboot to suppress the automatic reboot.
 #
 # Usage:
 #   sudo ./update-server.sh
-#   sudo ./update-server.sh --reboot
+#   sudo ./update-server.sh --no-reboot
 #   sudo ./update-server.sh --no-snap --no-flatpak
 #
 # Exit status:
@@ -46,7 +46,8 @@ Usage: update-server.sh [OPTIONS]
 Update the operating system and common system-wide application packages.
 
 Options:
-  --reboot       Reboot automatically if the completed updates require it.
+  --no-reboot    Do not automatically reboot, even if updates require it.
+  --reboot       Explicitly enable automatic reboot (the default behavior).
   --no-snap      Skip Snap package updates.
   --no-flatpak   Skip Flatpak package updates.
   -h, --help     Show this help text.
@@ -61,6 +62,9 @@ while (($#)); do
     case "$1" in
         --reboot)
             AUTO_REBOOT=1
+            ;;
+        --no-reboot)
+            AUTO_REBOOT=0
             ;;
         --no-snap)
             DO_SNAP=0
@@ -230,10 +234,14 @@ fi
 # On RHEL-family systems, use the DNF needs-restarting plugin when available.
 if [[ "$REBOOT_REQUIRED" -eq 0 ]] && command -v dnf >/dev/null 2>&1; then
     if dnf needs-restarting --help >/dev/null 2>&1; then
-        set +e
-        dnf needs-restarting -r >/dev/null 2>&1
-        needs_restart_rc=$?
-        set -e
+        # dnf needs-restarting -r intentionally returns 1 when a reboot is
+        # required. Run it as an if-condition so the global ERR trap does not
+        # mistake that expected status for an update failure.
+        if dnf needs-restarting -r >/dev/null 2>&1; then
+            needs_restart_rc=0
+        else
+            needs_restart_rc=$?
+        fi
 
         if [[ "$needs_restart_rc" -eq 1 ]]; then
             REBOOT_REQUIRED=1
@@ -276,7 +284,7 @@ if [[ "$REBOOT_REQUIRED" -eq 1 ]]; then
     printf 'Reason        : %s\n' "$REBOOT_REASON"
 
     if [[ "$AUTO_REBOOT" -eq 1 ]]; then
-        log "Reboot requested; rebooting the server now"
+        log "A reboot is required; rebooting the server automatically"
         sync
         if command -v systemctl >/dev/null 2>&1; then
             systemctl reboot
@@ -291,7 +299,7 @@ Reboot when your maintenance window permits:
 
     sudo reboot
 
-To have this script reboot automatically next time, run it with --reboot.
+Automatic reboot was suppressed with --no-reboot.
 EOF
     fi
 else
