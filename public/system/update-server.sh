@@ -37,7 +37,7 @@ export LC_ALL=C
 
 DO_SNAP=1
 DO_FLATPAK=1
-AUTO_REBOOT=0
+AUTO_REBOOT=1
 
 usage() {
     cat <<'EOF'
