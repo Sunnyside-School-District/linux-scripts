@@ -1,6 +1,6 @@
 # SUSD Linux Scripts
 
-Static Linux administration script catalog for Sunnyside Unified School District, deployed with Cloudflare Pages.
+Static Linux administration script catalog for Sunnyside Unified School District, deployed with Cloudflare Workers Static Assets.
 
 ## Repository layout
 
@@ -14,6 +14,7 @@ public/
 scripts/
   generate-index.mjs
 package.json
+wrangler.toml
 ```
 
 Do not hand-maintain category index pages. `scripts/generate-index.mjs` scans `public/` at build time and creates:
@@ -22,18 +23,24 @@ Do not hand-maintain category index pages. `scripts/generate-index.mjs` scans `p
 - An `index.html` inside every script folder and subfolder.
 - Script cards containing metadata, a safe download/run command, a raw-file link, a download link, and a SHA-256 checksum.
 
-## Cloudflare Pages settings
+## Cloudflare deployment settings
 
-Configure the GitHub repository in **Workers & Pages > Pages** with:
+This repository is deployed with Cloudflare Workers Static Assets. `wrangler.toml` points Cloudflare at the generated static site:
+
+```toml
+[assets]
+directory = "./public"
+```
+
+For Git-connected Workers Builds, use:
 
 - Production branch: `main`
-- Framework preset: `None`
 - Build command: `npm run build`
-- Build output directory: `public`
+- Deploy command: `npx wrangler deploy`
 - Root directory: leave blank / repository root
 - Custom domain: `linux-scripts.susd12.org`
 
-No Pages Functions or Workers are required. All scripts and generated catalog pages are static assets.
+All scripts and catalog pages under `public/` are static assets.
 
 The build can also be run locally:
 
